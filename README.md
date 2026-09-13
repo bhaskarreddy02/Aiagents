@@ -260,3 +260,23 @@ ngrok http 8000
 | Storage | CSV · SQLite · Excel |
 | Fonts | Inter · JetBrains Mono (Google Fonts) |
 | Deployment | aiohttp server · Procfile · Railway / Render |
+
+---
+
+## 🤖 Caspian Communication Agent Integration
+
+Aiagents includes a unified multi-channel communication agent using the **Caspian SDK**. One single `on_message` handler dynamically answers inquiries from any connected communication channel (Email, Slack, Discord, Telegram, X/Twitter, SMS/Phone) using real-time intelligence from the GraphOne/Aiagents knowledge graph.
+
+### Credentials
+- `CASPIAN_API_KEY`: Configured in `.env`
+- `CASPIAN_BASE_URL`: `https://api.trycaspianai.com`
+
+### Running the Communication Agent
+```bash
+# Connect to Email (default: assistant mailbox) and listen for inbound messages
+python src/caspian_agent.py --channel email --username assistant
+
+# Connect to other channels with the same handler
+python src/caspian_agent.py --channel discord
+python src/caspian_agent.py --channel slack
+```
