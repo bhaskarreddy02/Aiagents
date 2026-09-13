@@ -1237,3 +1237,159 @@ if __name__ == "__main__":
     port = int(os.environ.get("PORT", 8000))
     app = create_app()
     web.run_app(app, host="0.0.0.0", port=port)
+
+
+# =====================================================================
+# ASGI Adapter for Vercel Serverless Functions & Standard ASGI Runtimes
+# =====================================================================
+import mimetypes
+from urllib.parse import parse_qs
+
+
+class ASGIRequest:
+    def __init__(self, method: str, path: str, query: Dict[str, Any], body: bytes, headers: Dict[str, str]):
+        self.method = method
+        self.path = path
+        self.query = query
+        self._body = body
+        self.headers = headers
+
+    async def json(self):
+        if not self._body:
+            return {}
+        return json.loads(self._body.decode("utf-8"))
+
+    async def text(self):
+        return self._body.decode("utf-8")
+
+    async def read(self):
+        return self._body
+
+    async def post(self):
+        return {}
+
+
+async def asgi_app(scope, receive, send):
+    """
+    Top-level ASGI application entrypoint for Vercel Serverless Functions.
+    Dispatches to corresponding REST API handlers and static file serving.
+    """
+    if scope.get("type") == "lifespan":
+        while True:
+            message = await receive()
+            if message.get("type") == "lifespan.startup":
+                await send({"type": "lifespan.startup.complete"})
+            elif message.get("type") == "lifespan.shutdown":
+                await send({"type": "lifespan.shutdown.complete"})
+                return
+
+    if scope.get("type") != "http":
+        return
+
+    path = scope.get("path", "/")
+    method = scope.get("method", "GET").upper()
+    raw_query = scope.get("query_string", b"").decode("utf-8")
+    query_params = {k: v[0] if len(v) == 1 else v for k, v in parse_qs(raw_query).items()}
+
+    body_parts = []
+    more_body = True
+    while more_body:
+        msg = await receive()
+        body_parts.append(msg.get("body", b""))
+        more_body = msg.get("more_body", False)
+    body_bytes = b"".join(body_parts)
+
+    headers_dict = {k.decode("latin1").lower(): v.decode("latin1") for k, v in scope.get("headers", [])}
+    req = ASGIRequest(method, path, query_params, body_bytes, headers_dict)
+
+    routes = {
+        "/api/stats": handle_stats,
+        "/api/startups": handle_startups,
+        "/api/products": handle_products,
+        "/api/papers": handle_papers,
+        "/api/jobs": handle_jobs,
+        "/api/news": handle_news,
+        "/api/mappings": handle_mappings,
+        "/api/resolve": handle_resolve_live,
+        "/api/download/xlsx": handle_download_excel,
+        "/api/download/pdf": handle_download_pdf,
+        "/api/trigger": handle_trigger_pipeline,
+        "/api/graph/entity": handle_graph_entity,
+        "/api/graph/entities": handle_graph_entities_list,
+        "/api/pipeline/status": handle_pipeline_status,
+        "/api/pipeline/logs": handle_pipeline_logs,
+        "/api/pipeline/run-now": handle_pipeline_run_now,
+    }
+
+    # Match API route
+    handler_fn = routes.get(path)
+    if handler_fn:
+        try:
+            resp = await handler_fn(req)
+            status = resp.status
+            resp_headers = [(k.encode("latin1"), v.encode("latin1")) for k, v in resp.headers.items()]
+            body = getattr(resp, "body", b"")
+            if body is None:
+                body = getattr(resp, "text", "").encode("utf-8")
+
+            # Handle FileResponse if returned by download endpoints
+            if isinstance(resp, web.FileResponse):
+                file_path = getattr(resp, "_path", None)
+                if file_path and Path(file_path).exists():
+                    body = Path(file_path).read_bytes()
+
+            await send({"type": "http.response.start", "status": status, "headers": resp_headers})
+            await send({"type": "http.response.body", "body": body})
+            return
+        except Exception as e:
+            err_body = json.dumps({"error": str(e)}).encode("utf-8")
+            await send({
+                "type": "http.response.start",
+                "status": 500,
+                "headers": [(b"content-type", b"application/json")],
+            })
+            await send({"type": "http.response.body", "body": err_body})
+            return
+
+    # Serve static assets from PUBLIC_DIR
+    target_file = None
+    if path in ("/", "/index.html"):
+        target_file = PUBLIC_DIR / "index.html"
+    elif path in ("/activity", "/activity.html"):
+        target_file = PUBLIC_DIR / "activity.html"
+    elif path.startswith("/static/"):
+        rel = path[len("/static/"):]
+        target_file = PUBLIC_DIR / rel
+    else:
+        candidate = PUBLIC_DIR / path.lstrip("/")
+        if candidate.exists() and candidate.is_file():
+            target_file = candidate
+
+    if target_file and target_file.exists() and target_file.is_file():
+        mime, _ = mimetypes.guess_type(str(target_file))
+        mime = mime or "application/octet-stream"
+        file_bytes = target_file.read_bytes()
+        await send({
+            "type": "http.response.start",
+            "status": 200,
+            "headers": [
+                (b"content-type", mime.encode("latin1")),
+                (b"content-length", str(len(file_bytes)).encode("latin1")),
+            ],
+        })
+        await send({"type": "http.response.body", "body": file_bytes})
+        return
+
+    # Not found
+    await send({
+        "type": "http.response.start",
+        "status": 404,
+        "headers": [(b"content-type", b"application/json")],
+    })
+    await send({"type": "http.response.body", "body": b'{"error": "Not Found"}'})
+
+
+# Top-level ASGI entrypoints for Vercel & ASGI servers
+app = asgi_app
+application = asgi_app
+handler = asgi_app
