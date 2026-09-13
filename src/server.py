@@ -1238,7 +1238,6 @@ if __name__ == "__main__":
     app = create_app()
     web.run_app(app, host="0.0.0.0", port=port)
 
-
 # =====================================================================
 # ASGI Adapter for Vercel Serverless Functions & Standard ASGI Runtimes
 # =====================================================================
@@ -1286,8 +1285,25 @@ async def asgi_app(scope, receive, send):
     if scope.get("type") != "http":
         return
 
-    path = scope.get("path", "/")
+    raw_path = scope.get("path", "/")
     method = scope.get("method", "GET").upper()
+    headers_dict = {k.decode("latin1").lower(): v.decode("latin1") for k, v in scope.get("headers", [])}
+
+    # If routed via Vercel rewrite to /src/server.py, retrieve real path from Vercel headers
+    if raw_path.startswith("/src/server.py") or raw_path == "/src/server.py":
+        path = (
+            headers_dict.get("x-matched-path")
+            or headers_dict.get("x-forwarded-uri")
+            or headers_dict.get("x-invoke-path")
+            or raw_path
+        )
+    else:
+        path = raw_path
+
+    # Clean query string if present in path
+    if "?" in path:
+        path = path.split("?")[0]
+
     raw_query = scope.get("query_string", b"").decode("utf-8")
     query_params = {k: v[0] if len(v) == 1 else v for k, v in parse_qs(raw_query).items()}
 
@@ -1299,7 +1315,6 @@ async def asgi_app(scope, receive, send):
         more_body = msg.get("more_body", False)
     body_bytes = b"".join(body_parts)
 
-    headers_dict = {k.decode("latin1").lower(): v.decode("latin1") for k, v in scope.get("headers", [])}
     req = ASGIRequest(method, path, query_params, body_bytes, headers_dict)
 
     routes = {
@@ -1327,7 +1342,7 @@ async def asgi_app(scope, receive, send):
         try:
             resp = await handler_fn(req)
             status = resp.status
-            resp_headers = [(k.encode("latin1"), v.encode("latin1")) for k, v in resp.headers.items()]
+            resp_headers = [(k.lower().encode("latin1"), v.encode("latin1")) for k, v in resp.headers.items()]
             body = getattr(resp, "body", b"")
             if body is None:
                 body = getattr(resp, "text", "").encode("utf-8")
@@ -1351,23 +1366,37 @@ async def asgi_app(scope, receive, send):
             await send({"type": "http.response.body", "body": err_body})
             return
 
-    # Serve static assets from PUBLIC_DIR
+    # Static assets handling
     target_file = None
+    clean_path = path.lstrip("/")
     if path in ("/", "/index.html"):
         target_file = PUBLIC_DIR / "index.html"
     elif path in ("/activity", "/activity.html"):
         target_file = PUBLIC_DIR / "activity.html"
-    elif path.startswith("/static/"):
-        rel = path[len("/static/"):]
-        target_file = PUBLIC_DIR / rel
+    elif clean_path.startswith("static/"):
+        rel = clean_path[len("static/"):]
+        # Look in PUBLIC_DIR / rel, or PUBLIC_DIR / "static" / rel
+        c1 = PUBLIC_DIR / rel
+        c2 = PUBLIC_DIR / "static" / rel
+        target_file = c1 if c1.exists() else c2
     else:
-        candidate = PUBLIC_DIR / path.lstrip("/")
-        if candidate.exists() and candidate.is_file():
-            target_file = candidate
+        c1 = PUBLIC_DIR / clean_path
+        c2 = PUBLIC_DIR / "static" / clean_path
+        if c1.exists() and c1.is_file():
+            target_file = c1
+        elif c2.exists() and c2.is_file():
+            target_file = c2
 
     if target_file and target_file.exists() and target_file.is_file():
         mime, _ = mimetypes.guess_type(str(target_file))
+        if str(target_file).endswith(".css"):
+            mime = "text/css; charset=utf-8"
+        elif str(target_file).endswith(".js"):
+            mime = "application/javascript; charset=utf-8"
+        elif str(target_file).endswith(".html"):
+            mime = "text/html; charset=utf-8"
         mime = mime or "application/octet-stream"
+
         file_bytes = target_file.read_bytes()
         await send({
             "type": "http.response.start",
@@ -1375,6 +1404,7 @@ async def asgi_app(scope, receive, send):
             "headers": [
                 (b"content-type", mime.encode("latin1")),
                 (b"content-length", str(len(file_bytes)).encode("latin1")),
+                (b"cache-control", b"public, max-age=3600"),
             ],
         })
         await send({"type": "http.response.body", "body": file_bytes})

@@ -1,6 +1,9 @@
 {
   "version": 2,
+  "cleanUrls": true,
   "rewrites": [
-    { "source": "/(.*)", "destination": "/src/server.py" }
+    { "source": "/static/(.*)", "destination": "/static/$1" },
+    { "source": "/activity", "destination": "/activity.html" },
+    { "source": "/api/(.*)", "destination": "/src/server.py" }
   ]
 }
