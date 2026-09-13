@@ -1,0 +1,473 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>GraphOne / FrontierAtlas — Global AI Intelligence Graph</title>
+  <meta name="description" content="Real-time AI intelligence graph: 3,170+ entities across startups, products, research papers, jobs, and news with live entity resolution.">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&family=JetBrains+Mono:wght@400;600&display=swap" rel="stylesheet">
+  <link rel="stylesheet" href="/static/style.css?v=popover_final_v7">
+  <script src="/static/vis-network.min.js"></script>
+</head>
+<body>
+
+  <!-- Header -->
+  <header class="app-header">
+    <div class="brand">
+      <div class="brand-icon">G1</div>
+      <div>
+        <div class="brand-title">
+          GraphOne
+          <span class="brand-badge">FrontierAtlas</span>
+        </div>
+      </div>
+    </div>
+
+    <div class="header-status">
+      <span class="status-dot"></span>
+      <span>Live</span>
+    </div>
+
+    <div class="header-actions">
+      <a href="/activity" class="btn btn-secondary activity-btn" id="header-activity-btn" title="Recent Visits & User Activity">
+        <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M3 12a9 9 0 1 0 9-9 9.75 9.75 0 0 0-6.74 2.74L3 8"></path>
+          <path d="M3 3v5h5"></path>
+          <path d="M12 7v5l4 2"></path>
+        </svg>
+        <span>Recent Visits</span>
+        <span class="activity-counter-pill" id="header-activity-count">0</span>
+      </a>
+      <a href="/api/download/pdf" class="btn btn-secondary" download="GraphOne_Architecture.pdf" target="_blank">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+        Architecture PDF
+      </a>
+      <a href="/api/download/xlsx" class="btn btn-primary" download="GraphOne_Intelligence_Graph.xlsx">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+        Download Excel
+      </a>
+    </div>
+  </header>
+
+  <main class="container">
+
+    <!-- Hero Metric -->
+    <section class="hero-metric">
+      <div class="hero-value" id="kpi-signals">170</div>
+      <div class="hero-label">24-hour signals ingested — news &amp; jobs verified fresh</div>
+      <div class="hero-sub" id="kpi-freshness-sub">100% verified &lt;24h</div>
+    </section>
+
+    <!-- Secondary Stats Strip -->
+    <div class="secondary-stats">
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-total">3,170</span>
+        <span class="stat-label">Total Entities</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-startups">1,000</span>
+        <span class="stat-label">Startups</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-products">1,000</span>
+        <span class="stat-label">Products</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-papers">1,000</span>
+        <span class="stat-label">Papers</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-jobs">115</span>
+        <span class="stat-label">Jobs</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-news">55</span>
+        <span class="stat-label">News</span>
+      </div>
+      <div class="stat-item">
+        <span class="stat-value" id="kpi-accuracy">96.4%</span>
+        <span class="stat-label">Entity Resolution</span>
+      </div>
+    </div>
+
+    <!-- Navigation Tabs -->
+    <div class="tabs-bar">
+      <button class="tab-btn active" data-tab="startups">Startups</button>
+      <button class="tab-btn" data-tab="products">Products</button>
+      <button class="tab-btn" data-tab="papers">Papers</button>
+      <button class="tab-btn" data-tab="jobs">Jobs</button>
+      <button class="tab-btn" data-tab="news">News</button>
+      <button class="tab-btn" data-tab="mappings">Entity Audit</button>
+      <button class="tab-btn" data-tab="resolver">Entity Resolver</button>
+      <button class="tab-btn" data-tab="pipeline">Pipeline</button>
+      <button class="tab-btn" data-tab="graph">Knowledge Graph</button>
+      <button class="tab-btn" data-tab="architecture">Architecture</button>
+    </div>
+
+
+    <!-- Controls Bar -->
+    <div class="controls-bar" id="controls-bar">
+      <div class="search-wrapper">
+        <span class="search-icon">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+        </span>
+        <input type="text" id="filter-search" class="search-input" placeholder="Search across current vertical...">
+      </div>
+
+      <div style="display: flex; gap: 10px; align-items: center; flex-wrap: wrap;">
+        <select id="filter-secondary" class="filter-select">
+          <option value="ALL">All Categories</option>
+        </select>
+        <select id="filter-team-size" class="filter-select" style="display: none;">
+          <option value="ALL">All Team Sizes</option>
+          <option value="1-5">1–5 Employees</option>
+          <option value="6-15">6–15 Employees</option>
+          <option value="16-50">16–50 Employees</option>
+          <option value="50+">50+ Employees</option>
+        </select>
+        <select id="filter-sort" class="filter-select" style="display: none;">
+          <option value="default">Sort: Default</option>
+        </select>
+        <button id="refresh-btn" class="btn btn-secondary">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="23 4 23 10 17 10"></polyline><path d="M20.49 15a9 9 0 1 1-2.12-9.36L23 10"></path></svg>
+          Refresh
+        </button>
+      </div>
+    </div>
+
+    <!-- Dynamic Content Area -->
+    <div id="content-container">
+      <div class="table-container">
+        <table id="main-table">
+          <thead>
+            <tr id="table-head"></tr>
+          </thead>
+          <tbody id="table-body">
+            <tr><td colspan="6" style="text-align: center; padding: 40px; color: var(--text-muted);">Loading records...</td></tr>
+          </tbody>
+        </table>
+      </div>
+
+      <!-- Pagination -->
+      <div class="pagination-bar" id="pagination-bar">
+        <div class="pagination-info" id="pagination-info">
+          Showing <strong id="page-start" style="color: var(--text);">1</strong>–<strong id="page-end" style="color: var(--text);">10</strong> of <strong id="page-total" style="color: var(--text);">1,000</strong>
+        </div>
+        
+        <div class="pagination-controls" id="pagination-controls">
+          <!-- Dynamically populated -->
+        </div>
+
+        <div class="pagination-size">
+          <span style="font-size: 0.78rem; color: var(--text-muted);">Rows:</span>
+          <select id="page-size-select" class="filter-select" style="padding: 5px 10px; font-size: 0.8rem; width: auto;">
+            <option value="10" selected>10</option>
+            <option value="25">25</option>
+            <option value="50">50</option>
+            <option value="100">100</option>
+            <option value="250">250</option>
+            <option value="500">500</option>
+            <option value="1000">1,000</option>
+            <option value="5000">5,000</option>
+            <option value="999999">Show All</option>
+          </select>
+        </div>
+      </div>
+    </div>
+
+    <!-- Pipeline Monitor -->
+    <div id="pipeline-container" class="panel-container" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: flex-start; margin-bottom: 20px; flex-wrap: wrap; gap: 16px;">
+        <div>
+          <div style="display: flex; align-items: center; gap: 10px;">
+            <h2 class="panel-title">Continuous Monitoring Pipeline</h2>
+            <span class="badge badge-fresh" style="font-size: 0.72rem;">● Active</span>
+          </div>
+          <p class="panel-subtitle">
+            Persistent SQLite state tracking across 10 modular crawlers with deduplication and 24h freshness enforcement.
+          </p>
+        </div>
+        <button id="btn-run-pipeline-now" class="btn btn-primary" style="display: flex; align-items: center; gap: 6px;">
+          <span id="pipeline-btn-icon">▶</span> Run Cycle Now
+        </button>
+      </div>
+
+      <!-- Pipeline KPIs -->
+      <div class="panel-kpi-grid">
+        <div class="panel-kpi">
+          <div class="panel-kpi-label">Persistent Store</div>
+          <div class="panel-kpi-value" style="color: var(--accent);">SQLite WAL</div>
+          <div class="panel-kpi-sub">data/pipeline_state.db</div>
+        </div>
+        <div class="panel-kpi">
+          <div class="panel-kpi-label">Total Tracked Items</div>
+          <div class="panel-kpi-value" id="pl-total-seen" style="color: #5EEAD4;">273+</div>
+          <div class="panel-kpi-sub">Persisted seen hashes</div>
+        </div>
+        <div class="panel-kpi">
+          <div class="panel-kpi-label">Stale Discarded (&gt;24h)</div>
+          <div class="panel-kpi-value" id="pl-stale-discarded" style="color: #FBBF24;">296</div>
+          <div class="panel-kpi-sub">Marked seen, skipped</div>
+        </div>
+        <div class="panel-kpi">
+          <div class="panel-kpi-label">Passed 24h Freshness</div>
+          <div class="panel-kpi-value" id="pl-fresh-passed" style="color: #5EEAD4;">115+</div>
+          <div class="panel-kpi-sub">Multi-tier LLM extracted</div>
+        </div>
+        <div class="panel-kpi">
+          <div class="panel-kpi-label">Run Schedule</div>
+          <div class="panel-kpi-value" style="color: var(--accent);">Every 30 Min</div>
+          <div class="panel-kpi-sub">Daemon loop / API trigger</div>
+        </div>
+      </div>
+
+      <!-- Crawlers Table -->
+      <div style="margin-bottom: 24px;">
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="font-size: 0.95rem; font-weight: 600;">10 Modular Crawlers</h3>
+          <span style="font-size: 0.76rem; color: var(--text-muted);">5 News + 5 Job Boards · Isolated error boundaries</span>
+        </div>
+        <div class="table-container" style="max-height: 380px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Source</th>
+                <th>Type</th>
+                <th>Status</th>
+                <th>Total Seen</th>
+                <th>Last Run (UTC)</th>
+                <th>Rate-Limit</th>
+              </tr>
+            </thead>
+            <tbody id="pl-sources-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+
+      <!-- Run Logs Table -->
+      <div>
+        <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 10px;">
+          <h3 style="font-size: 0.95rem; font-weight: 600;">Recent Run Logs</h3>
+          <span style="font-size: 0.76rem; color: var(--text-muted);">SQLite crawl_run_logs</span>
+        </div>
+        <div class="table-container" style="max-height: 280px;">
+          <table class="data-table">
+            <thead>
+              <tr>
+                <th>Run ID</th>
+                <th>Start</th>
+                <th>Duration</th>
+                <th>Sources</th>
+                <th>New</th>
+                <th>&lt;24h</th>
+                <th>Stale</th>
+                <th>Status</th>
+              </tr>
+            </thead>
+            <tbody id="pl-runs-tbody"></tbody>
+          </table>
+        </div>
+      </div>
+    </div>
+
+    <!-- Knowledge Graph Interactive Explorer -->
+    <div id="graph-container" class="panel-container" style="display: none;">
+      <div class="graph-header-bar">
+        <div>
+          <h2 class="panel-title">Interactive Venture Knowledge Graph</h2>
+          <p class="panel-subtitle" id="graph-panel-subtitle">Explore 360° near-linkages across Startups, Products, Research Papers, Jobs, and News.</p>
+        </div>
+        <div class="graph-actions">
+          <button id="graph-fit-btn" class="btn btn-secondary btn-sm" title="Center and Fit View">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"></circle><line x1="22" y1="12" x2="18" y2="12"></line><line x1="6" y1="12" x2="2" y2="12"></line><line x1="12" y1="6" x2="12" y2="2"></line><line x1="12" y1="22" x2="12" y2="18"></line></svg>
+            Fit View
+          </button>
+        </div>
+      </div>
+
+      <!-- Entity Selector Strip -->
+      <div class="graph-control-strip">
+        <!-- Category Switching Bar (Just like Activity) -->
+        <div class="graph-category-selector-bar">
+          <span class="graph-category-lead">Explore By Category:</span>
+          <div class="graph-category-pills" id="graph-category-pills">
+            <button class="graph-cat-pill active" data-category="startups">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polygon points="12 2 2 7 12 12 22 7 12 2"></polygon><polyline points="2 17 12 22 22 17"></polyline><polyline points="2 12 12 17 22 12"></polyline></svg>
+              <span>Startups</span>
+            </button>
+            <button class="graph-cat-pill" data-category="products">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"></path></svg>
+              <span>Products</span>
+            </button>
+            <button class="graph-cat-pill" data-category="papers">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"></path><polyline points="14 2 14 8 20 8"></polyline></svg>
+              <span>Research Papers</span>
+            </button>
+            <button class="graph-cat-pill" data-category="jobs">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect><path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path></svg>
+              <span>Jobs</span>
+            </button>
+            <button class="graph-cat-pill" data-category="news">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 20H5a2 2 0 0 1-2-2V6a2 2 0 0 1 2-2h10a2 2 0 0 1 2 2v1m2 13a2 2 0 0 1-2-2V7m2 13a2 2 0 0 0 2-2V9a2 2 0 0 0-2-2h-2m-4-3H9M7 16h6M7 8h6v4H7V8z"></path></svg>
+              <span>News</span>
+            </button>
+          </div>
+        </div>
+
+        <div class="graph-search-box">
+          <span class="search-icon">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"></circle><line x1="21" y1="21" x2="16.65" y2="16.65"></line></svg>
+          </span>
+          <input type="text" id="graph-entity-input" list="graph-entities-datalist" class="graph-search-input" placeholder="Search startup name (e.g. OpenAI, Anthropic, Cohere, DeepMark, Maritime)..." value="OpenAI">
+          <datalist id="graph-entities-datalist"></datalist>
+          <button id="graph-load-btn" class="btn btn-primary">Visualize Graph ⚡</button>
+        </div>
+
+        <div class="graph-preset-chips" id="graph-preset-chips">
+          <span class="chip-label">Quick Select:</span>
+          <button class="graph-chip active" data-entity="OpenAI">OpenAI</button>
+          <button class="graph-chip" data-entity="Anthropic">Anthropic</button>
+          <button class="graph-chip" data-entity="Cohere">Cohere</button>
+          <button class="graph-chip" data-entity="DeepMind">DeepMind</button>
+          <button class="graph-chip" data-entity="Mistral AI">Mistral AI</button>
+          <button class="graph-chip" data-entity="Hugging Face">Hugging Face</button>
+          <button class="graph-chip" data-entity="DeepMark">DeepMark (YC)</button>
+          <button class="graph-chip" data-entity="Maritime">Maritime (YC)</button>
+        </div>
+      </div>
+
+      <!-- Graph Workspace -->
+      <div class="graph-workspace">
+        <div class="graph-canvas-wrapper">
+          <div id="vis-network-canvas" class="vis-network-canvas"></div>
+          <!-- Custom Glassmorphism Preview Card -->
+          <div id="graph-preview-card" class="graph-preview-card"></div>
+          <div class="graph-legend-strip">
+            <div class="legend-item"><span class="legend-dot" style="background:#6366F1; box-shadow: 0 0 8px #6366F1;"></span> 🏢 Startup</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#10B981;"></span> 🚀 Products</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#F59E0B;"></span> 📄 Research Papers</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#0284C7;"></span> 💼 Job Roles</div>
+            <div class="legend-item"><span class="legend-dot" style="background:#F43F5E;"></span> 📰 News Signals</div>
+          </div>
+        </div>
+
+        <!-- Node Inspector Drawer -->
+        <div class="graph-inspector-panel" id="graph-inspector">
+          <div class="inspector-header">
+            <span class="inspector-badge" id="node-inspector-badge">STARTUP</span>
+            <span class="inspector-hint">Click any node to redirect</span>
+          </div>
+          <h3 class="inspector-title" id="node-inspector-title">OpenAI</h3>
+          <p class="inspector-desc" id="node-inspector-desc">Select any node on the graph to inspect its details and navigate directly to its external resource.</p>
+          
+          <div class="inspector-meta-grid" id="node-inspector-meta">
+            <!-- Dynamic Key-Value Pairs -->
+          </div>
+
+          <div class="inspector-action-box">
+            <a id="node-redirect-btn" href="#" target="_blank" class="btn btn-primary btn-block">
+              <span>Open Link / Visit Node</span>
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"></path><polyline points="15 3 21 3 21 9"></polyline><line x1="10" y1="14" x2="21" y2="3"></line></svg>
+            </a>
+            <div class="inspector-tip">⚡ Clicking any node in the graph opens its live external link.</div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Architecture -->
+    <div id="arch-container" class="panel-container" style="display: none;">
+      <div style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 24px; flex-wrap: wrap; gap: 12px;">
+        <div>
+          <h2 class="panel-title">Production Architecture &amp; Scale Strategy</h2>
+          <p class="panel-subtitle">Blueprint to scale from 1,000 to 500,000+ records with zero manual intervention.</p>
+        </div>
+        <a href="/api/download/pdf" class="btn btn-primary" target="_blank">Download PDF</a>
+      </div>
+
+      <div class="arch-grid">
+        <div class="arch-card">
+          <h3 style="color: var(--accent);">1. 500k+ Scale Strategy</h3>
+          <p>
+            <b>Distributed Frontier Queue:</b> Apache Kafka partitioned by domain hash to isolate throttling.<br>
+            <b>Anti-Bot Navigation:</b> TLS impersonation via <code>curl_cffi</code> with residential proxy rotation.<br>
+            <b>SPA Engine:</b> Playwright headless worker pool intercepting GraphQL/XHR endpoints.
+          </p>
+        </div>
+
+        <div class="arch-card">
+          <h3 style="color: #5EEAD4;">2. Handling 413s &amp; 429s</h3>
+          <p>
+            <b>HTTP 413 Mitigation:</b> Strips non-semantic DOM tags with sliding token budgeting.<br>
+            <b>HTTP 429 Mitigation:</b> Exponential backoff with Decorrelated Full Jitter.<br>
+            <b>Multi-Tier Cascade:</b> Gemini Flash → Groq Llama 3 → DeepSeek → Local Regex.
+          </p>
+        </div>
+
+        <div class="arch-card">
+          <h3 style="color: #FBBF24;">3. Freshness &amp; Deduplication</h3>
+          <p>
+            <b>Distributed Bloom Filter:</b> RedisBloom checks seen URLs in &lt;1ms with &lt;0.01% FP rate.<br>
+            <b>SimHash Fingerprinting:</b> 64-bit MinHash detects syndicated cross-posts (Hamming ≤ 3).<br>
+            <b>Strict 24h Verification:</b> Real-time date normalization filters stale records.
+          </p>
+        </div>
+
+        <div class="arch-card">
+          <h3 style="color: #C084FC;">4. Polyglot Storage</h3>
+          <p>
+            <b>PostgreSQL 16:</b> ACID state of truth for canonical entities.<br>
+            <b>ClickHouse:</b> 250k+ signal rows/sec with 80% columnar compression.<br>
+            <b>Neo4j:</b> O(1) relationship traversal across venture links.
+          </p>
+        </div>
+      </div>
+    </div>
+
+    <!-- Entity Resolver Panel -->
+    <div id="resolver-container" class="panel-container" style="display: none;">
+      <div style="margin-bottom: 20px;">
+        <h2 class="panel-title">Deterministic &amp; LLM Entity Resolution Engine</h2>
+        <p class="panel-subtitle">
+          Disambiguates messy, typo-ridden company names and colloquial abbreviations into canonical entities using multi-tier LLM reasoning (Gemini Flash &amp; Groq LPU) alongside seed legal suffix stripping.
+        </p>
+      </div>
+
+      <section class="playground-section" style="margin-bottom: 24px;">
+        <div class="playground-header">
+          <div class="section-title">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2v20M17 5H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"></path></svg>
+            Interactive Entity Resolution Playground
+          </div>
+          <span style="font-size: 0.76rem; color: var(--text-muted);">Try: "appole", "OpenAI, Inc.", "Mistral AI SAS", "gogole", "msft"</span>
+        </div>
+
+        <div class="playground-row">
+          <input type="text" id="er-input" class="input-field" placeholder="Enter entity string (e.g. 'appole', 'open ai inc', 'anthropic pbc')..." value="appole">
+          <button id="er-btn" class="btn btn-primary">Resolve Entity</button>
+        </div>
+
+        <div class="resolve-result" id="er-result">
+          <div>
+            <span style="color: var(--text-muted);">Input:</span> <strong id="res-raw" style="color: var(--text);">appole</strong>
+            <span style="color: var(--text-muted); margin: 0 6px;">→</span>
+            <strong id="res-canonical" style="color: var(--accent);">Apple</strong>
+          </div>
+          <div style="display: flex; gap: 10px; align-items: center;">
+            <span style="color: var(--text-muted);">Confidence:</span> <strong id="res-conf" style="color: #5EEAD4;">95%</strong>
+            <span class="badge badge-freemium" id="res-method">LLM_SEMANTIC (Gemini Flash)</span>
+          </div>
+        </div>
+      </section>
+    </div>
+
+  </main>
+
+  <div id="toast" class="toast">Notification</div>
+
+  <script src="/static/tracker.js"></script>
+  <script src="/static/app.js?v=popover_final_v5"></script>
+</body>
+</html>

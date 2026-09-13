@@ -1,0 +1,23 @@
+__pycache__/
+*.py[cod]
+*$py.class
+*.so
+.Python
+env/
+venv/
+.venv/
+ENV/
+.env
+.env.*
+!.env.example
+.pytest_cache/
+.coverage
+htmlcov/
+*.log
+
+# SQLite WAL/SHM temp files (auto-created at runtime)
+data/*.db-shm
+data/*.db-wal
+
+# Scratch/temp scripts
+scratch/
